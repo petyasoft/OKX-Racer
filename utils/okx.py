@@ -57,51 +57,55 @@ class Okx:
         self.session = aiohttp.ClientSession(headers=headers, trust_env=True, connector=aiohttp.TCPConnector(verify_ssl=False))
 
     async def main(self):
-        await asyncio.sleep(random.uniform(*config.ACC_DELAY))
-        while True:
-            await self.login()
-            info = (await self.get_info())
-            tasks = (await self.get_tasks())
-            if 'data' not in tasks:
-                logger.error(f'tasks | Thread {self.thread} | {self.name}.session | {tasks}')
-                await asyncio.sleep(random.uniform(*config.MINI_SLEEP))
-            else:
-                tasks = tasks['data']
-                random.shuffle(tasks)
-                for task in tasks:
-                    if random.randint(0,3) == 1:
-                        if task['state'] == 1 or task['id'] in config.BLACKLIST:
-                            continue
-                        is_do = await self.do_task(id_ = task['id'])
-                        if is_do:
-                            logger.success(f'do task | Thread {self.thread} | {self.name}.session | claim {task["points"]} points for {task["context"]["name"]}')
-                        
-            boosts = (await self.get_boosts())
-            if 'data' not in boosts:
-                logger.error(f'boosts | Thread {self.thread} | {self.name}.session | {boosts}')
-                await asyncio.sleep(random.uniform(*config.MINI_SLEEP))
-            else:
-                boosts = boosts['data']
-                random.shuffle(boosts)
-                for boost in boosts:
-                    if 'isLocked' in boost:
-                        if boost['isLocked']:
-                            continue
-                    is_can_buy = await self.can_buy(boost=boost)
-                    if is_can_buy:
-                        bougth = await self.do_boost(id_ = boost['id'])
-                        if bougth:
-                            if 'pointCost' in boost['context']:
-                                price = boost["context"]["pointCost"]
-                            else:
-                                price = 0
-                            logger.success(f'do boost | Thread {self.thread} | {self.name}.session | buy {task["context"]["name"]} for {price} points')
-            for _ in range(random.randint(0,info['data']['numChances'])):
-                await self.guess_price()
-            
-            sleep = random.uniform(*config.BIG_SLEEP)
-            logger.info(f'main | Thread {self.thread} | {self.name}.session | Ушел в сон на {sleep} сек')
-            await asyncio.sleep(sleep)
+        try:
+            await asyncio.sleep(random.uniform(*config.ACC_DELAY))
+            logger.info(f"main | Thread {self.thread} | {self.name} | Start! | PROXY : {self.proxy}")
+            while True:
+                await self.login()
+                info = (await self.get_info())
+                tasks = (await self.get_tasks())
+                if 'data' not in tasks:
+                    logger.error(f'tasks | Thread {self.thread} | {self.name}.session | {tasks}')
+                    await asyncio.sleep(random.uniform(*config.MINI_SLEEP))
+                else:
+                    tasks = tasks['data']
+                    random.shuffle(tasks)
+                    for task in tasks:
+                        if random.randint(0,3) == 1:
+                            if task['state'] == 1 or task['id'] in config.BLACKLIST:
+                                continue
+                            is_do = await self.do_task(id_ = task['id'])
+                            if is_do:
+                                logger.success(f'do task | Thread {self.thread} | {self.name}.session | claim {task["points"]} points for {task["context"]["name"]}')
+                            
+                boosts = (await self.get_boosts())
+                if 'data' not in boosts:
+                    logger.error(f'boosts | Thread {self.thread} | {self.name}.session | {boosts}')
+                    await asyncio.sleep(random.uniform(*config.MINI_SLEEP))
+                else:
+                    boosts = boosts['data']
+                    random.shuffle(boosts)
+                    for boost in boosts:
+                        if 'isLocked' in boost:
+                            if boost['isLocked']:
+                                continue
+                        is_can_buy = await self.can_buy(boost=boost)
+                        if is_can_buy:
+                            bougth = await self.do_boost(id_ = boost['id'])
+                            if bougth:
+                                if 'pointCost' in boost['context']:
+                                    price = boost["context"]["pointCost"]
+                                else:
+                                    price = 0
+                                logger.success(f'do boost | Thread {self.thread} | {self.name}.session | buy {task["context"]["name"]} for {price} points')
+                for _ in range(random.randint(0,info['data']['numChances'])):
+                    await self.guess_price()
+                
+                sleep = random.uniform(*config.BIG_SLEEP)
+                logger.info(f'main | Thread {self.thread} | {self.name}.session | Ушел в сон на {sleep} сек')
+                await asyncio.sleep(sleep)
+        except:
+            await self.session.close()
         
     async def get_tg_web_data(self):
         await self.client.connect()
