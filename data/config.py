@@ -23,6 +23,8 @@ WORKDIR = "sessions/"
 
 # использование прокси
 USE_PROXY = True # True/False
+# проверять прокси
+CHECK_PROXY = True
 
 # задержка между кругом
 BIG_SLEEP = [3600,10000]
